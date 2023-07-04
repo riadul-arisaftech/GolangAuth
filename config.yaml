@@ -1,0 +1,27 @@
+environment: development
+
+database:
+  driver: postgres
+  engine: postgresql
+  host: localhost
+  port: "5432"
+  username: root
+  password: "2654"
+  name: simple_auth
+  sslmode: disable
+  migration_url: file://src/db/migration
+
+server:
+  http_address: 0.0.0.0:8080
+  grpc_address: 0.0.0.0:9090
+  redis_address: 0.0.0.0:9090
+
+token:
+  symetric_key: 12345678901234567890123456789012
+  access_token_duration: 15m
+  refresh_token_duration: 24h
+
+email:
+  sender_name: 
+  sender_address:
+  sender_password:

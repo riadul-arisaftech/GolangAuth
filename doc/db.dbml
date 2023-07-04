@@ -1,0 +1,62 @@
+Project simple_auth {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Go Auth Database
+  '''
+}
+
+Table "users" as U {
+  "id" BIGINT [pk, increment, unique, not null]
+  "full_name" VARCHAR(255) [not null]
+  "email" varchar [unique, not null]
+  "password" VARCHAR(255) [not null]
+  "status" VARCHAR(255) [not null]
+  "is_email_verified" bool [not null, default: false]
+  "password_changed_at" timestamptz [not null, default: '0001-01-01']
+  "created_at" timestamptz [not null, default: `now()`]
+
+  Indexes {
+    "email" [name:"email_index"]
+    }
+}
+
+Table "sessions" {
+  "id" uuid [pk]
+  "user_id" BIGINT [ref: > U.id, not null]
+  "refresh_token" varchar [not null]
+  "user_agent" varchar [not null]
+  "client_ip" varchar [not null]
+  "is_blocked" bool [not null, default: false]
+  "expires_at" timestamptz [not null]
+  "created_at" timestamptz [not null, default: `now()`]
+}
+
+Table "verify_emails" {
+  "id" BIGINT [pk, increment, unique]
+  "user_id" BIGINT [ref: > U.id, not null]
+  "email" varchar [not null]
+  "secret_code" varchar [not null]
+  "is_used" bool [not null, default: false]
+  "created_at" timestamptz [not null, default: `now()`]
+  "expired_at" timestamptz [not null, default: `now() + interval '15 minutes'`]
+}
+
+Table "user_role" {
+  "user_id" BIGINT [ref: > U.id, not null]
+  "role_id" BIGINT [ref: > roles.id, not null]
+}
+
+Table "role_permission" {
+  "role_id" BIGINT [ref: > roles.id, not null]
+  "permission_id" BIGINT [ref: > permissions.id, not null]
+}
+
+Table "roles" {
+  "id" BIGINT [pk, increment, unique, not null]
+  "name" VARCHAR(255) [not null]
+}
+
+Table "permissions" {
+  "id" BIGINT [pk, increment, unique, not null]
+  "name" BIGINT [not null]
+}
