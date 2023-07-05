@@ -7,16 +7,15 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator"
 	db "github.com/riad/simple_auth/src/db/sqlc"
-	"github.com/riad/simple_auth/src/http/routes"
 	"github.com/riad/simple_auth/src/token"
 	"github.com/riad/simple_auth/src/util"
 )
 
 type Server struct {
-	config     util.Config
-	store      db.Store
-	tokenMaker token.Maker
-	router     *gin.Engine
+	Config     util.Config
+	Store      db.Store
+	TokenMaker token.Maker
+	Router     *gin.Engine
 }
 
 func NewServer(config util.Config, store db.Store) (*Server, error) {
@@ -26,9 +25,9 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	}
 
 	server := &Server{
-		config:     config,
-		store:      store,
-		tokenMaker: tokenMaker,
+		Config:     config,
+		Store:      store,
+		TokenMaker: tokenMaker,
 	}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -42,14 +41,14 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 func (server *Server) setupRouter() {
 	router := gin.Default()
 
-	routes.SetUserRouter(router.Group("/api"), server.tokenMaker)
+	server.SetAuthRouter(router.Group("/api"))
 
-	server.router = router
+	server.Router = router
 }
 
 // Start runs the HTTP server on a specific address.
 func (server *Server) Start(address string) error {
-	return server.router.Run(address)
+	return server.Router.Run(address)
 }
 
 var ValidStatus validator.Func = func(fieldLevel validator.FieldLevel) bool {
