@@ -12,14 +12,13 @@ import (
 	"github.com/riad/simple_auth/src/util"
 )
 
-type Server struct {
-	Config     util.Config
-	Store      db.Store
-	TokenMaker token.Maker
-	Router     *gin.Engine
+type AuthController struct {
+	Store  db.Store
+	Maker  token.Maker
+	Config util.Config
 }
 
-func CreateUser(ctx *gin.Context, store db.Store) {
+func (ctrl AuthController) CreateUser(ctx *gin.Context) {
 	var req models.CreateUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, helpers.ErrorResponse(err))
@@ -38,7 +37,7 @@ func CreateUser(ctx *gin.Context, store db.Store) {
 		Status:   "active",
 	}
 
-	user, err := store.CreateUser(ctx, arg)
+	user, err := ctrl.Store.CreateUser(ctx, arg)
 	if err != nil {
 		if helpers.ErrorCode(err) == helpers.UniqueViolation {
 			ctx.JSON(http.StatusForbidden, helpers.ErrorResponse(err))
@@ -52,14 +51,14 @@ func CreateUser(ctx *gin.Context, store db.Store) {
 	ctx.JSON(http.StatusOK, rsp)
 }
 
-func (server *Server) LoginUser(ctx *gin.Context) {
+func (ctrl AuthController) LoginUser(ctx *gin.Context) {
 	var req models.LoginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, helpers.ErrorResponse(err))
 		return
 	}
 
-	user, err := store.GetUser(ctx, req.Email)
+	user, err := ctrl.Store.GetUser(ctx, req.Email)
 	if err != nil {
 		if errors.Is(err, helpers.ErrRecordNotFound) {
 			ctx.JSON(http.StatusNotFound, helpers.ErrorResponse(err))
@@ -75,7 +74,7 @@ func (server *Server) LoginUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, accessPayload, err := maker.CreateToken(user.Email)
+	accessToken, accessPayload, err := ctrl.Maker.CreateToken(user.Email, ctrl.Config.Token.AccessTokenDuration)
 }
 
 // UpdateExample handles the PUT request for the example endpoint

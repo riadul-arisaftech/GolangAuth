@@ -35,15 +35,8 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 	}
 
 	server.setupRouter()
+
 	return server, nil
-}
-
-func (server *Server) setupRouter() {
-	router := gin.Default()
-
-	server.SetAuthRouter(router.Group("/api"))
-
-	server.Router = router
 }
 
 // Start runs the HTTP server on a specific address.
