@@ -11,7 +11,7 @@ func (server *Server) setupRouter() {
 
 	authController := controllers.AuthController{Store: server.Store, Maker: server.TokenMaker, Config: server.Config}
 
-	api := router.Group("/api")
+	api := router.Group("api")
 
 	auth := api.Group("auth")
 	{

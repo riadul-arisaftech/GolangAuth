@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -13,7 +14,11 @@ import (
 )
 
 func NewTestServer(t *testing.T, store db.Store) *(HP.Server) {
-	config := util.Config{
+	config, err := util.LoadConfig("../../../../.")
+	if err != nil {
+		fmt.Printf("cannot load config")
+	}
+	config = util.Config{
 		Token: util.TokenConfig{
 			SymetricKey:         util.RandomString(32),
 			AccessTokenDuration: time.Minute,

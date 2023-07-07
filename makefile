@@ -33,4 +33,7 @@ test:
 server:
 	go run main.go
 
-.PHONY: network postgres createDB dropDB db_schema new_migrations migrateUp migrateDown sqlc test server
+mock:
+	mockgen -package mockdb -destination src/db/mock/store.go github.com/riad/simple_auth/src/db/sqlc Store
+
+.PHONY: network postgres createDB dropDB db_schema new_migrations migrateUp migrateDown sqlc test server mock
