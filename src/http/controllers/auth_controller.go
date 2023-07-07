@@ -75,6 +75,41 @@ func (ctrl AuthController) LoginUser(ctx *gin.Context) {
 	}
 
 	accessToken, accessPayload, err := ctrl.Maker.CreateToken(user.Email, ctrl.Config.Token.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, helpers.ErrorResponse(err))
+		return
+	}
+
+	refreshToken, refreshPayload, err := ctrl.Maker.CreateToken(user.Email, ctrl.Config.Token.RefreshTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, helpers.ErrorResponse(err))
+		return
+	}
+
+	session, err := ctrl.Store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           refreshPayload.ID,
+		UserID:       user.ID,
+		RefreshToken: refreshToken,
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIp:     ctx.ClientIP(),
+		IsBlocked:    false,
+		ExpiresAt:    refreshPayload.ExpiredAt,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, helpers.ErrorResponse(err))
+		return
+	}
+
+	rsp := models.LoginUserResponse{
+		SessionID:             session.ID,
+		AccessToken:           accessToken,
+		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
+		User:                  models.NewUserResponse(user),
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
 }
 
 // UpdateExample handles the PUT request for the example endpoint
