@@ -1,9 +1,10 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	db "github.com/riad/simple_auth/src/db/sqlc"
 	HTTP "github.com/riad/simple_auth/src/http"
 	"github.com/riad/simple_auth/src/util"
@@ -20,7 +21,8 @@ func main() {
 		fmt.Printf("cannot load config")
 	}
 
-	connPool, err := sql.Open(config.Database.Driver, config.Database.GetDBSource())
+	// connPool, err := sql.Open(config.Database.Driver, config.Database.GetDBSource())
+	connPool, err := pgxpool.New(context.Background(), config.Database.GetDBSource())
 	if err != nil {
 		fmt.Printf("cannot connect to db")
 	}

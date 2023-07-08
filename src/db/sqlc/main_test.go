@@ -1,11 +1,12 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"os"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
 
 	"github.com/riad/simple_auth/src/util"
@@ -19,11 +20,12 @@ func TestMain(m *testing.M) {
 		log.Fatal("cannot load config: ", err)
 	}
 
-	testDB, err := sql.Open(config.Database.Driver, config.Database.GetDBSource())
+	// testDB, err := sql.Open(config.Database.Driver, config.Database.GetDBSource())
+	connPool, err := pgxpool.New(context.Background(), config.Database.GetDBSource())
 	if err != nil {
 		log.Fatal("cannot connect to db: ", err)
 	}
-	testStore = NewStore(testDB)
+	testStore = NewStore(connPool)
 
 	os.Exit(m.Run())
 }
