@@ -36,4 +36,10 @@ server:
 mock:
 	mockgen -package mockdb -destination src/db/mock/store.go github.com/riad/simple_auth/src/db/sqlc Store
 
-.PHONY: network postgres createDB dropDB db_schema new_migrations migrateUp migrateDown sqlc test server mock
+proto:
+	rm -f src/grpc/pb/*.go
+	protoc --proto_path=src/grpc/proto --go_out=src/grpc/pb --go_opt=paths=source_relative \
+    --go-grpc_out=src/grpc/pb --go-grpc_opt=paths=source_relative \
+    src/grpc/proto/*.proto
+
+.PHONY: network postgres createDB dropDB db_schema new_migrations migrateUp migrateDown sqlc test server mock proto
