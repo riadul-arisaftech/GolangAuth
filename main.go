@@ -3,11 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	db "github.com/riad/simple_auth/src/db/sqlc"
+	"github.com/riad/simple_auth/src/gapi"
+	"github.com/riad/simple_auth/src/gapi/pb"
 	HTTP "github.com/riad/simple_auth/src/http"
 	"github.com/riad/simple_auth/src/util"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -32,7 +38,8 @@ func main() {
 
 	store := db.NewStore(connPool)
 
-	runGinServer(config, store)
+	// runGinServer(config, store)
+	runGRPCServer(config, store)
 }
 
 func runDBMigration(migrationURL string, dbSource string) {
@@ -46,6 +53,28 @@ func runDBMigration(migrationURL string, dbSource string) {
 	}
 
 	fmt.Printf("db migrated successfully")
+}
+
+func runGRPCServer(config util.Config, store db.Store) {
+	server, err := gapi.NewServer(config, store)
+	if err != nil {
+		log.Fatal("cannot create server:", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterSimpleAuthServer(grpcServer, server)
+	reflection.Register(grpcServer)
+
+	listener, err := net.Listen("tcp", config.Server.GRPCAddress)
+	if err != nil {
+		log.Fatal("cannot create listener")
+	}
+
+	log.Printf("start GRPC server at %s", listener.Addr().String())
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		log.Fatal("cannot start GRPC server")
+	}
 }
 
 func runGinServer(config util.Config, store db.Store) {
